@@ -19,7 +19,7 @@
 
 action :add do
   execute "rabbitmqctl add_user #{new_resource.user} #{new_resource.password}" do
-    not_if "rabbitmqctl list_users | grep #{new_resource.user}"
+    not_if "rabbitmqctl list_users | grep -e '^#{new_resource.user}'"
     Chef::Log.info "Adding RabbitMQ user '#{new_resource.user}'."
     new_resource.updated_by_last_action(true)
   end
@@ -27,7 +27,7 @@ end
 
 action :delete do
   execute "rabbitmqctl delete_user #{new_resource.user}" do
-    only_if "rabbitmqctl list_users | grep #{new_resource.user}"
+    only_if "rabbitmqctl list_users | grep -e '^#{new_resource.user}'"
     Chef::Log.info "Deleting RabbitMQ user '#{new_resource.user}'."
     new_resource.updated_by_last_action(true)
   end
@@ -63,4 +63,24 @@ action :clear_permissions do
       new_resource.updated_by_last_action(true)
     end
   end
+end
+
+action :set_tags do
+
+   user = new_resource.user
+   new_tags = new_resource.tags.each{ |e| e.downcase }.sort
+   only_if_tags = new_tags.join(", ")
+   execute "rabbitmqctl set_user_tags #{new_resource.user} #{new_tags.join(' ')}" do
+     only_if "rabbitmqctl list_users | grep -e '^#{new_resource.user}' | grep '#{only_if_tags}'"
+     Chef::Log.info "Setting tags for #{user} to #{only_if_tags}"
+     new_resource.updated_by_last_action(true)
+   end
+
+end
+
+action :clear_tags do
+   execute "rabbitmqctl set_user_tags #{new_resource.user}" do
+     not_if "rabbitmqctl list_users | grep -e '^#{new_resource.user}' | grep '\[\]'"
+     Chef::Log.info "Clearing tags for #{new_resource.user}"
+   end
 end
