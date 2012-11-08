@@ -70,17 +70,19 @@ action :set_tags do
    user = new_resource.user
    new_tags = new_resource.tags.each{ |e| e.downcase }.sort
    only_if_tags = new_tags.join(", ")
+   Chef::Log.debug "Going to set tags ( #{only_if_tags} )  for #{user}."
    execute "rabbitmqctl set_user_tags #{new_resource.user} #{new_tags.join(' ')}" do
-     only_if "rabbitmqctl list_users | grep -e '^#{new_resource.user}' | grep '#{only_if_tags}'"
-     Chef::Log.info "Setting tags for #{user} to #{only_if_tags}"
+     not_if "rabbitmqctl list_users | grep -e '^#{new_resource.user}' | grep '#{only_if_tags}'"
+     Chef::Log.debug "Setting tags ( #{only_if_tags} ) for #{user}."
      new_resource.updated_by_last_action(true)
    end
 
 end
 
 action :clear_tags do
+   Chef::Log.debug "Going to clear tags for #{new_resource.user}"
    execute "rabbitmqctl set_user_tags #{new_resource.user}" do
      not_if "rabbitmqctl list_users | grep -e '^#{new_resource.user}' | grep '\[\]'"
-     Chef::Log.info "Clearing tags for #{new_resource.user}"
+     Chef::Log.debug "Clearing tags for #{new_resource.user}"
    end
 end

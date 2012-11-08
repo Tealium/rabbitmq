@@ -18,6 +18,7 @@
 #
 
 include_recipe "rabbitmq::default"
+
 Chef::Log.info("Running Rabbitmq::Users");
 require 'pp'
 
@@ -26,7 +27,7 @@ require 'pp'
 # Need a better way then using ``.
 current_users = `rabbitmqctl list_users | head -n -1 | tail -n +2 | cut -f 1`.split("\n")
 Chef::Log.info("Found current users: #{current_users.join(' , ')}");
-users_to_delete = current_users
+users_to_delete = (current_users + ["guest"]).uniq
 
 app_environment = node["app_environment"] || "development"
 
@@ -89,6 +90,7 @@ rabbitmq_users.each do |username|
 
    # Now we need to delete any users that were not in our databag.
    if node[:rabbitmq][:delete_users] 
+      Chef::Log.info("Removing extra users.");
       users_to_delete.each do |user|
          
          Chef::Log.info("Removing user: #{user}")
@@ -99,4 +101,5 @@ rabbitmq_users.each do |username|
    end
 
 end
+
 
