@@ -20,7 +20,7 @@
 
 action :enable do
   execute "rabbitmq-plugins enable #{new_resource.plugin}" do
-    not_if "rabbitmq-plugin list | grep -e '^\[ \]^ #{new_resource.plugin} '"
+    not_if "rabbitmq-plugins list | grep -e '^\\[[E]\\] #{new_resource.plugin} '"
     Chef::Log.info "Enabling RabbitMQ Plugin #{new_resource.plugin}"
     new_resource.updated_by_last_action(true)
     notifies :restart, "service[rabbitmq-server]"
@@ -29,7 +29,7 @@ end
 
 action :disable do
   execute "rabbitmq-plugins disable #{new_resource.plugin}" do
-    only_if "rabbitmq-plugin list | grep -e '^\[ \] #{new_resource.plugin} '"
+    only_if "rabbitmq-plugins list | grep -e '^\\[[E]\\] #{new_resource.plugin} '"
     Chef::Log.info "Disabling RabbitMQ Plugin #{new_resource.plugin}"
     new_resource.updated_by_last_action(true)
     notifies :restart, "service[rabbitmq-server]"
