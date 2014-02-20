@@ -18,7 +18,7 @@
 #
 
 action :add do
-  execute "rabbitmqctl add_user #{new_resource.user} #{new_resource.password}" do
+  execute "rabbitmqctl add_user #{new_resource.user} '#{new_resource.password}'" do
     not_if "rabbitmqctl list_users | grep -e '^#{new_resource.user}'"
     Chef::Log.info "Adding RabbitMQ user '#{new_resource.user}'."
     new_resource.updated_by_last_action(true)
