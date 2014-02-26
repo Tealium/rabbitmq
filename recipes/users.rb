@@ -17,7 +17,7 @@
 # limitations under the License.
 #
 
-include_recipe "rabbitmq::default"
+#include_recipe "rabbitmq::default"
 
 Chef::Log.info("Running Rabbitmq::Users");
 require 'pp'
