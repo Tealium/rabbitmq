@@ -28,10 +28,7 @@ require 'pp'
 current_users = `rabbitmqctl list_users | head -n -1 | tail -n +2 | cut -f 1`.split("\n")
 Chef::Log.info("Found current users: #{current_users.join(' , ')}");
 users_to_delete = (current_users + ["guest"]).uniq
-
 app_environment = node["app_environment"] || "development"
-
-
 
 Chef::Log.info("Looking for environment: #{app_environment}");
 rabbitmq_db = search(:rabbitmq_users,"id:#{app_environment}").first
@@ -40,7 +37,7 @@ rabbitmq_users = rabbitmq_db["users"].keys
 Chef::Log.info("Found rabbit users: #{rabbitmq_users.count}");
 
 rabbitmq_users.each do |username|
-
+   
    Chef::Log.info("Adding user: #{username}")
    user = rabbitmq_db["users"][username]
    # We do not want to delete this user.
@@ -99,7 +96,65 @@ rabbitmq_users.each do |username|
          end
       end
    end
+end
 
+admin_users = search(:users,'rabbit_password:*')
+
+admin_users.each do |user|
+
+  id = user["id"]
+  password = user["rabbit_password"] 
+
+  unless user["enabled"] == false
+    Chef::Log.info("Admin users are are #{user["id"]}")
+
+    #id = user["id"]
+    #password = user["rabbit_password"]
+
+    ops_db = search(:groups,"id:devops").first
+    ops_users = ops_db["members"]
+
+    Chef::Log.warn("Ops_users are #{ops_users}")
+
+    Chef::Log.warn("Current users is #{user}")
+
+    if ops_users.include?("#{id}")
+
+      execute "user_curl" do 
+        command "curl -i -u admin:toor4cars9window14five. -H 'content-type:application/json' -XPUT -d '{\"password_hash\":\"#{password}\", \"tags\":\"administrator\"}' http://localhost:15672/api/users/#{id}"
+      end
+
+      admin = rabbitmq_db["users"]["admin"]
+
+      admin["vhosts"].each do |user_vhost, user_permissions|
+        rabbitmq_user "#{id}" do
+          vhost user_vhost
+          permissions user_permissions
+          action :set_permissions
+        end
+      end
+
+    else
+
+      execute "user_curl" do
+        command "curl -i -u admin:toor4cars9window14five. -H 'content-type:application/json' -XPUT -d '{\"password_hash\":\"#{password}\", \"tags\":\"monitoring\"}' http://localhost:15672/api/users/#{id}"
+      end
+
+      monitor_user = rabbitmq_db["users"]["monitor_user"]
+
+      monitor_user["vhosts"].each do |user_vhost, user_permissions|
+        rabbitmq_user "#{id}" do
+          vhost user_vhost
+          permissions user_permissions
+          action :set_permissions
+        end
+      end
+    end
+  else
+    rabbitmq_user "#{id}" do
+      action :delete
+    end
+  end
 end
 
 
