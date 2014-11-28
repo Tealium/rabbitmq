@@ -18,6 +18,7 @@ default[:rabbitmq][:config] = "/etc/rabbitmq/rabbitmq"
 # rabbitmq.config defaults
 default[:rabbitmq][:default_user] = 'guest'
 default[:rabbitmq][:default_pass] = 'guest'
+default[:rabbitmq][:frame_max] = "1048576"
 
 #clustering
 default[:rabbitmq][:cluster] = false
