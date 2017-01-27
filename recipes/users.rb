@@ -28,10 +28,11 @@ require 'pp'
 current_users = `rabbitmqctl list_users | head -n -1 | tail -n +2 | cut -f 1`.split("\n")
 Chef::Log.info("Found current users: #{current_users.join(' , ')}");
 users_to_delete = (current_users + ["guest"]).uniq
-app_environment = node["app_environment"] || "development"
 
-Chef::Log.info("Looking for environment: #{app_environment}");
-rabbitmq_db = search(:rabbitmq_users,"id:#{app_environment}").first
+rabbitmq_users_databag = node['rabbitmq']['users_databag']
+
+Chef::Log.info("Looking for data bag item: #{rabbitmq_users_databag}");
+rabbitmq_db = search(:rabbitmq_users,"id:#{rabbitmq_users_databag}").first
 rabbitmq_users = rabbitmq_db["users"].keys
 
 Chef::Log.info("Found rabbit users: #{rabbitmq_users.count}");

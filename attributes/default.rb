@@ -34,3 +34,4 @@ default[:rabbitmq][:ssl_key] = '/path/to/key.pem'
 
 # User Management
 default[:rabbitmq][:delete_users] = false
+default[:rabbitmq][:users_databag] = node[:app_environment] || 'development'
